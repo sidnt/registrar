@@ -8,12 +8,12 @@ object userRepo {
   type UserRepo = Has[Service]
   trait Service {
     def createUser(u: User): IO[Fail, Unit]
-    def getUser(ui: UserId): IO[Fail, User]
+    def readUser(ui: UserId): IO[Fail, User]
     def updateUser(ui: UserId, u: User): IO[Fail, Unit]
     def deleteUser(ui: UserId): IO[Fail, Unit]
   }
 
-  val accessUserRepo: URIO[Has[Service], Service] = ZIO.service[Service]
+  val accessUserRepoService: URIO[Has[Service], Service] = ZIO.service[Service]
 
   val inMemUserRepo: ULayer[Has[Service]] =
     ZLayer.succeed(
@@ -24,7 +24,7 @@ object userRepo {
           if(inMemDb.contains(u.userId)) IO.fail(Fail("User Already Exists!")) else UIO(inMemDb.addOne(u.userId -> u))
         }
 
-        override def getUser(ui: UserId): IO[Fail, User] = {
+        override def readUser(ui: UserId): IO[Fail, User] = {
           ZIO.fromOption(inMemDb.get(ui)).orElseFail(Fail("User Doesn't Exist!"))
         }
 
